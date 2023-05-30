@@ -85,8 +85,8 @@ class Power {
         return $cookieValue
     }
 
-    [Void] SetCookie([String]$cookieName, [String]$cookieValue, [String]$domain, [System.Net.HttpListenerResponse]$response) {
-        $cookieHeader = "$cookieName=$cookieValue; Domain=$domain; Path=/"
-        $response.Headers.Add("Set-Cookie", $cookieHeader)
+    [Void] SetCookie([String]$cookieName, [String]$cookieValue, [String]$cookiePath, [DateTime]$cookieExpiration, [System.Net.HttpListenerResponse]$response) {
+        $cookieExpirationFormatted = $cookieExpiration.ToUniversalTime().ToString("R")
+        $response.Headers.Add("Set-Cookie", "$cookieName=$cookieValue; Expires=$cookieExpirationFormatted; Path=$cookiePath")
     }
 }
