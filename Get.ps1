@@ -29,3 +29,5 @@ $power.GET("/", {
     $power.SetCookie("deneme", "31", "http://localhost:8080",$response)
     Write-Host $power.GetCookie("deneme", $context.Request)
 })
+
+$power.Run("8080")
