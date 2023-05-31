@@ -3,7 +3,7 @@ class Power {
     [String] $HTMLBlob
     [System.Net.HttpListener] $HttpListener
     [System.Collections.ArrayList] $Routes
-    
+    [String] $File
     Power() {
         $this.Routes = [System.Collections.ArrayList]::new()
         $this.HttpListener = [System.Net.HttpListener]::new()    
@@ -24,12 +24,11 @@ class Power {
             $response = $context.Response
             
             $matchedRoute = $this.Routes | Where-Object { $_.Method -eq $request.HttpMethod -and $_.Route -eq $request.RawUrl }
-            
+
             if ($matchedRoute) {
                 $action = $matchedRoute.Action
                 $action.Invoke($context)
-            }
-            
+            }  
             $response.Close()
         }
     }
@@ -45,6 +44,29 @@ class Power {
     [Void] POST([String]$route, [ScriptBlock]$action) {
         $this.Routes.Add(@{
             "Method" = "POST"
+            "Route" = $route
+            "Action" = $action
+        })
+    }
+
+    [Void] PublicFile([String]$route, [String]$filePath) {
+        $action = [ScriptBlock]::Create(@"
+            param(`$context)
+            
+            `$response = `$context.Response
+            `$response.ContentType = "application/json"
+            `$response.ContentEncoding = [System.Text.Encoding]::UTF8
+
+            `$externalParam = Get-Content -Path "$filePath" -Raw
+
+            `$buffer = [System.Text.Encoding]::UTF8.GetBytes("`$externalParam")
+            `$response.ContentLength64 = `$buffer.Length
+            `$response.OutputStream.Write(`$buffer, 0, `$buffer.Length)
+"@
+        )
+
+        $this.Routes.Add(@{
+            "Method" = "GET"
             "Route" = $route
             "Action" = $action
         })
