@@ -88,9 +88,27 @@ class Power {
         return $formData
     }
 
-    [String] HTML([String]$filePath) {
+   [Void] HTML($response, [String]$filePath, [Hashtable]$variables) {
         $htmlContent = Get-Content -Path $filePath -Raw
-        return $htmlContent
+        foreach ($key in $variables.Keys) {
+            $htmlContent = $htmlContent -replace "{{ .$key }}", $variables[$key]
+        }
+        
+        $response.ContentType = "text/html"
+        $response.ContentEncoding = [System.Text.Encoding]::UTF8
+
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($htmlContent)
+        $response.ContentLength64 = $buffer.Length
+        $response.OutputStream.Write($buffer, 0, $buffer.Length)
+    }
+
+    [Void] JSON($response, $Api) {
+        $response.ContentType = "application/json"
+        $response.ContentEncoding = [System.Text.Encoding]::UTF8
+        $jsonData =  $Api | ConvertTo-Json
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($jsonData)
+        $response.ContentLength64 = $buffer.Length
+        $response.OutputStream.Write($buffer, 0, $buffer.Length)
     }
 
     [String] GetCookie([String]$cookieName, [System.Net.HttpListenerRequest]$request) {
